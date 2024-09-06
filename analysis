@@ -1,0 +1,404 @@
+Website:
+JustWatch - https://www.justwatch.com/in/movies?release_year_from=2000
+
+Task 1:- Web Scrapping
+
+#Installing all necessary labraries
+!pip install bs4
+!pip install requests
+
+#import all necessary labraries
+import requests
+from bs4 import BeautifulSoup
+import re
+import pandas as pd
+import numpy as np
+
+Scrapping Movies Data
+# Specifying the URL from which movies related data will be fetched
+url='https://www.justwatch.com/in/movies?release_year_from=2000'
+
+# Sending an HTTP GET request to the URL
+page=requests.get(url)
+# Parsing the HTML content using BeautifulSoup with the 'html.parser'
+soup=BeautifulSoup(page.text,'html.parser')
+# Printing the prettified HTML content
+print(soup.prettify())
+
+
+Fetching Movie URL's
+# Write Your Code here
+Movie_url  =[]
+movies_link = soup.find_all("a",class_="title-list-grid__item--link")
+for link in movies_link:
+    movie_url = "https://www.justwatch.com"+link["href"]
+    Movie_url.append(movie_url)
+
+Movie_url
+
+Scrapping Movie Title
+# Write Your Code here
+
+Movie_Title =[]
+
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  title = soup.find("div",class_="title-block").h1.text
+  Movie_Title.append(title)
+
+# print(Movie_Title)
+Movie_Title
+
+Scrapping release Year
+# Write Your Code here
+Release_year =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  year = soup.find("div",class_="title-block").span.text.strip("( )")
+  Release_year.append(year)
+
+# print(Release_year)
+Release_year
+
+
+Scrapping Genres
+# Write Your Code here
+Genre =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  Genre_indi = soup.find('h3', class_='detail-infos__subheading', string='Genres').find_next_sibling('div', class_='detail-infos__value').text.strip()
+
+  Genre.append(Genre_indi)
+Genre
+
+
+Scrapping IMBD Rating
+# Write Your Code here
+Imdb_Rating =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+
+  try:
+    Imdb = soup.find_all("div",class_="jw-scoring-listing__rating")[1].span
+    Imdb1= Imdb.text[1:4]
+  except Exception as e:
+    # print(err)
+    Imdb1 = "NA"
+  Imdb_Rating.append(Imdb1)
+Imdb_Rating
+
+
+Scrapping Runtime/Duration
+# Write Your Code here
+Runtime =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    Runtime_indi = soup.find('h3', class_='detail-infos__subheading', string='Runtime').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    Runtime_indi ='NA'
+  Runtime.append(Runtime_indi)
+Runtime
+
+Scrapping Age Rating
+# Write Your Code here
+Age_Rating=[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    rating1 = soup.find('h3', class_='detail-infos__subheading', string='Age rating').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    rating1 = "NA"
+  Age_Rating.append(rating1)
+Age_Rating
+
+
+Fetching Production Countries Details
+# Write Your Code here
+Country_origin =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    country1=soup.find('h3', class_='detail-infos__subheading', string=' Production country ').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    country1 = 'NA'
+  Country_origin.append(country1)
+Country_origin
+
+
+
+Fetching Streaming Service Details
+# Write Your Code here
+Streaming_Provider =[]
+for url in Movie_url:
+  response = requests.get(url)
+  try:
+    soup = BeautifulSoup(response.text,"html.parser")
+    Stream_provider = soup.find("div",class_='buybox-row stream').find_all("img",class_='offer__icon')
+    alt_values = [img['alt'] for img in Stream_provider]
+    alt_values = ",".join(alt_values)
+
+  except AttributeError as err:
+    alt_values = 'NA'
+  Streaming_Provider.append(alt_values)
+Streaming_Provider
+
+
+Now Creating Movies DataFrame
+# Write Your Code here
+dict1 ={"Title":Movie_Title,"Release Year":Release_year,"Genre":Genre,"Imdb Rating":Imdb_Rating,"Runtime":Runtime,
+        "Age Rating":Age_Rating,"Country origin":Country_origin,
+        "Url":Movie_url,"Streaming Provider":Streaming_Provider,"Type" : 'Movie'}
+Movies_df = pd.DataFrame(dict1)
+Movies_df
+
+
+##Changing NA value in  Imdb rating with NaN(Not a number)
+Movies_df['Imdb Rating'] = Movies_df['Imdb Rating'].replace("NA",float("NaN"))
+
+
+Scraping TV Show Data
+# Specifying the URL from which tv show related data will be fetched
+tv_url='https://www.justwatch.com/in/tv-shows?release_year_from=2000'
+# Sending an HTTP GET request to the URL
+page=requests.get(tv_url)
+# Parsing the HTML content using BeautifulSoup with the 'html.parser'
+soup=BeautifulSoup(page.text,'html.parser')
+# Printing the prettified HTML content
+print(soup.prettify())
+
+
+Fetching Tv shows Url details
+# Write Your Code here
+Tv_shows_url  =[]
+Tv_shows_link = soup.find_all("a",class_="title-list-grid__item--link")
+for link in Tv_shows_link:
+    tv_shows_url = "https://www.justwatch.com"+link["href"]
+    Tv_shows_url.append(tv_shows_url)
+Tv_shows_url
+
+
+Fetching Tv Show Title details
+# Write Your Code here
+Tv_shows_Title =[]
+
+for url in Tv_shows_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  title = soup.find("div",class_="title-block").h1.text
+  Tv_shows_Title.append(title)
+Tv_shows_Title
+
+
+Fetching Release Year
+# Write Your Code here
+Release_year_ =[]
+for url in Tv_shows_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  year = soup.find("div",class_="title-block").span.text.strip("( )")
+  Release_year_.append(year)
+Release_year_
+
+
+Fetching TV Show Genre Details
+# Write Your Code here
+Genre_ =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    Genre_indi1 = soup.find('h3', class_='detail-infos__subheading', string='Genres').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    Genre_indi1 ='NA'
+
+  Genre_.append(Genre_indi1)
+Genre_
+
+
+
+Fetching IMDB Rating Details
+# Write Your Code here
+Imdb_Rating_ =[]
+for url in Tv_shows_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+
+  try:
+    Imdb = soup.find_all("div",class_="jw-scoring-listing__rating")[1].span
+    Imdb1= Imdb.text[1:4]
+  except Exception as e:
+    # print(err)
+    Imdb1 = "NA"
+  Imdb_Rating_.append(Imdb1)
+Imdb_Rating
+
+
+Fetching Age Rating Details
+# Write Your Code here
+Age_Rating_=[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    rating1 = soup.find('h3', class_='detail-infos__subheading', string='Age rating').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    rating1 ='NA'
+  Age_Rating_.append(rating1)
+Age_Rating_
+
+
+Fetching Production Country details
+# Write Your Code here
+Country_origin_ =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    country1 = soup.find('h3', class_='detail-infos__subheading', string=' Production country ').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    country1 ='NA'
+  Country_origin_.append(country1)
+Country_origin_
+
+
+Fetching Streaming Service details
+# Write Your Code here
+Streaming_Provider_ =[]
+for url in Tv_shows_url:
+  response = requests.get(url)
+  try:
+    soup = BeautifulSoup(response.text,"html.parser")
+    Stream_provider = soup.find("div",class_='buybox-row stream').find_all("img",class_='offer__icon')
+    alt_values1 = [img['alt'] for img in Stream_provider]
+    alt_values1 = ",".join(alt_values1)
+
+  except AttributeError as err:
+    alt_values1 = "NaN"
+  Streaming_Provider_.append(alt_values1)
+Streaming_Provider_
+
+
+
+Fetching Duration Details
+# Write Your Code here
+Runtime_ =[]
+for url in Movie_url:
+  response = requests.get(url)
+  soup = BeautifulSoup(response.text,"html.parser")
+  try:
+    Runtime_indi1 = soup.find('h3', class_='detail-infos__subheading', string='Runtime').find_next_sibling('div', class_='detail-infos__value').text.strip()
+  except:
+    Runtime_indi1 ='NA'
+
+  Runtime_.append(Runtime_indi1)
+Runtime_
+
+
+
+Creating TV Show DataFrame
+# Write Your Code here
+dict2 ={"Title":Tv_shows_Title,"Release Year":Release_year_,"Genre":Genre_,"Imdb Rating":Imdb_Rating_,
+        "Runtime":Runtime_,"Age Rating":Age_Rating_,"Country origin":Country_origin_,
+        "Url":Tv_shows_url,"Streaming Provider":Streaming_Provider_,'Type':'Tv Show'}
+Tv_Shows_df = pd.DataFrame(dict2)
+Tv_Shows_df
+
+
+##Changing NA value in  Imdb rating with NaN(Not a number)
+Tv_Shows_df['Imdb Rating'] = Tv_Shows_df['Imdb Rating'].replace("NA",float("NaN"))
+
+##Final Data
+final_data_df = pd.concat([Movies_df,Tv_Shows_df])
+
+final_data_df
+
+
+Task 2 :- Data Filtering & Analysis
+
+final_data_df['Imdb Rating'] = final_data_df['Imdb Rating'].astype(float)
+# Write Your Code here
+## For Movies
+
+start_date = '2022'
+end_date = '2024'
+min_rating = 7.0
+filter_data_df = final_data_df[(final_data_df["Release Year"] >= start_date) & (final_data_df["Release Year"] <= end_date) & (final_data_df["Imdb Rating"] >= min_rating)]
+
+##Final Ouput
+filter_data_df
+
+Calculating Mean IMDB Ratings for both Movies and Tv Shows
+
+# Write Your Code here
+Mean_Rating = final_data_df.groupby("Type").agg({"Imdb Rating" : 'mean'})
+
+print("Mean Imdb Rating")
+Mean_Rating
+
+Analyzing Top Genres
+# Write Your Code here
+## for Movies
+Genre_count = final_data_df['Genre'].value_counts().sort_values(ascending=False)
+Top_5_genres_visulalize = Genre_count.head(5)
+Top_5_genres = Genre_count.head(5).index.tolist()
+
+Top_5_genres
+
+##Lets Visualize
+import matplotlib.pyplot as plt
+plt.bar(x =Top_5_genres_visulalize.index,height =Top_5_genres_visulalize.values)
+plt.xlabel('Genre')
+plt.ylabel('Number of Movies and TV Shows')
+plt.title('Top 5 Genres with the Most Movies and TV Shows')
+plt.xticks(rotation=45, ha='right')
+plt.show()
+
+
+
+Finding Predominant Streaming Service
+
+# Write Your Code here
+##Counting Streaming Service
+Streaming_service_counts = final_data_df['Streaming Provider'].value_counts().sort_values(ascending = False)
+
+## Streaming Services name with their count
+Streaming_service_counts
+
+
+## Streaming sevice name according to their count
+Top_streaming_service_name = Streaming_service_counts.head(1).index.str.cat(sep="")
+
+
+#Let's Visvalize it using word cloud
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
+# Taking text data from streaming service names
+text_data = Top_streaming_service_name
+
+# Create a WordCloud object
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_data)
+
+# Display the generated word cloud using Matplotlib
+plt.figure(figsize=(10, 4))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')  # Turn off axis labels
+plt.show()
+
+Task 3 :- Data Export
+
+final_data_df.to_csv("Final Data.csv")
+
+
+#saving filter data as Filter Data in csv format
+filter_data_df.to_csv("Filter Data.csv")
+
+Thank You
